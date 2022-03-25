@@ -4,7 +4,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Document</title>
+    <title>PokeApi</title>
     <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.0.1/dist/css/bootstrap.min.css" rel="stylesheet"
         integrity="sha384-+0n0xVW2eSR5OomGNYDnhzAbDsOXxcvSN1TPprVMTNDbiYZCxYbOOl7+AMvyTG2x" crossorigin="anonymous">
 </head>
@@ -30,24 +30,41 @@
                 <option value="luxio">Luxio</option>
             </select>
         </div>
+
+        <div class="input-group mb-3">
+            <span class="input-group-text" id="selected-pokemon-label">Hasta que pokemon quieres cargar??</span>            
+            <input class="hasta" type="number" value='10'>
+        </div>        
     </div>
 </body>
 <script>
+    // Configuracion del estado de la aplicación
     let state = {
         selector: document.querySelector('#select-pokemon'),
         name: document.querySelector('.card-title'),
         img: document.querySelector('.card-img-top'),
-        btn: document.querySelector('.btn'),
+        btn: document.querySelector('.btn'),        
+        hasta: document.querySelector('.hasta'),        
+        poke_number: 10,
+        poke_options:[],
         data: ''
     }
+
+    // Al cargar la pagina llenamos el select de pokemons
+    window.addEventListener('load', async function(){
+        pokeOptions();
+    })
+
     // 1. Cuando cambie el valor del selector, tenemos que detectar que opción hemos escogido. Probad que sois capaces de recuperar el valor seleccionado por el usuario con un console.log    
     state.selector.addEventListener('change', async function(event){
         let pokemon = state.selector.value
         let url = `https://pokeapi.co/api/v2/pokemon/${pokemon}`;
+        state.selector.disabled = true;
 
         let respuesta = await fetch(url);
         let json = await respuesta.json();
 
+        state.selector.disabled = false
         console.log(json);
 
         state.name.innerHTML = json.name;
@@ -57,10 +74,30 @@
         state.data = json;        
     })
 
+    state.hasta.addEventListener('input',function(){
+        state.poke_number = state.hasta.value;
+        pokeOptions();
+    })
+
     state.btn.addEventListener('click', function(){        
         state.img.src = state.data.sprites.front_shiny
     })
 
+    async function pokeOptions(){
+        let url = `https://pokeapi.co/api/v2/pokemon?limit=${state.poke_number}`
+        let respuesta = await fetch(url);
+        let json = await respuesta.json();
+
+        console.log("Carga principal: ", json);
+
+        state.selector.innerHTML = "";
+
+        json.results.forEach(element=>{            
+            state.selector.insertAdjacentHTML('beforeend',`
+                <option value='${element.name}'>${element.name}</option>
+            `)            
+        })
+    }
 
     // 2. En función de la opción escogida, 'montaremos' una URL
     // https://pokeapi.co/api/v2/pokemon/pikachu
